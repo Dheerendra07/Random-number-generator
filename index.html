@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Random Number Generator</title>
+  <style>
+    :root {
+      --bg: #121826;
+      --card: #1f2941;
+      --text: #eef2ff;
+      --primary: #7c5cff;
+      --secondary: #62d2ff;
+      --muted: #98a2b3;
+      --border: rgba(255, 255, 255, 0.08);
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: radial-gradient(circle at top, rgba(124, 92, 255, 0.2), transparent 35%),
+                  radial-gradient(circle at bottom right, rgba(98, 210, 255, 0.16), transparent 25%),
+                  linear-gradient(180deg, #10131d 0%, #141923 100%);
+      color: var(--text);
+    }
+
+    .container {
+      width: min(520px, calc(100% - 32px));
+      padding: 32px;
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      background: rgba(16, 18, 29, 0.92);
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.24);
+      backdrop-filter: blur(16px);
+    }
+
+    .title-group {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.8rem, 2.2vw, 2.6rem);
+      line-height: 1.05;
+    }
+
+    .subtitle {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 0.98rem;
+      max-width: 42rem;
+    }
+
+    .card {
+      background: #131a2c;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 20px;
+      padding: 28px;
+      display: grid;
+      gap: 20px;
+    }
+
+    .controls {
+      display: grid;
+      gap: 18px;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.95rem;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    select {
+      width: 100%;
+      padding: 14px 16px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.035);
+      color: var(--text);
+      font-size: 1rem;
+      appearance: none;
+    }
+
+    button {
+      width: 100%;
+      padding: 16px 20px;
+      border: none;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: #0b1220;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 16px 32px rgba(124, 92, 255, 0.22);
+    }
+
+    .result-box {
+      border-radius: 18px;
+      padding: 24px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      text-align: center;
+    }
+
+    .result-label {
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      font-size: 0.82rem;
+      margin-bottom: 10px;
+    }
+
+    .result-value {
+      font-size: clamp(2.4rem, 4vw, 4rem);
+      font-weight: 800;
+      margin: 0;
+      color: #ffffff;
+    }
+
+    .helper {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 0.96rem;
+    }
+
+    @media (max-width: 520px) {
+      .row {
+        grid-template-columns: 1fr;
+      }
+
+      .title-group {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="title-group">
+      <div>
+        <h1>Random Number Generator</h1>
+        <p class="subtitle">Choose a start and end value, then generate a random number instantly.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="controls">
+        <div class="row">
+          <div>
+            <label for="start-number">Start</label>
+            <select id="start-number" aria-label="Start number">
+            </select>
+          </div>
+          <div>
+            <label for="end-number">End</label>
+            <select id="end-number" aria-label="End number">
+            </select>
+          </div>
+        </div>
+
+        <button id="generate-btn">Generate Number</button>
+      </div>
+
+      <div class="result-box">
+        <div class="result-label">Your generated number</div>
+        <p class="result-value" id="random-output">--</p>
+        <p class="helper">The number will appear here after you click the button.</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const startSelect = document.getElementById('start-number');
+    const endSelect = document.getElementById('end-number');
+    const output = document.getElementById('random-output');
+    const generateBtn = document.getElementById('generate-btn');
+
+    function createOptions(selectElement, min, max, selectedValue) {
+      selectElement.innerHTML = '';
+      for (let i = min; i <= max; i += 1) {
+        const option = document.createElement('option');
+        option.value = i;
+        option.textContent = i;
+        if (i === selectedValue) {
+          option.selected = true;
+        }
+        selectElement.appendChild(option);
+      }
+    }
+
+    function clampRange() {
+      const startValue = Number(startSelect.value);
+      const endValue = Number(endSelect.value);
+      if (endValue <= startValue) {
+        const nextEnd = startValue + 1;
+        createOptions(endSelect, startValue + 1, 100, nextEnd);
+      }
+    }
+
+    function refreshRange() {
+      const startValue = Number(startSelect.value);
+      const currentEnd = Number(endSelect.value);
+      createOptions(endSelect, startValue + 1, 100, Math.max(currentEnd, startValue + 1));
+    }
+
+    function generateRandomNumber() {
+      const start = Number(startSelect.value);
+      const end = Number(endSelect.value);
+      if (end <= start) {
+        output.textContent = 'Invalid range';
+        return;
+      }
+      const randomValue = Math.floor(Math.random() * (end - start + 1)) + start;
+      output.textContent = randomValue;
+    }
+
+    createOptions(startSelect, 1, 98, 1);
+    createOptions(endSelect, 2, 100, 10);
+
+    startSelect.addEventListener('change', refreshRange);
+    endSelect.addEventListener('change', clampRange);
+    generateBtn.addEventListener('click', generateRandomNumber);
+  </script>
+</body>
+</html>
