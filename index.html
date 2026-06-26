@@ -147,6 +147,148 @@
       font-size: 0.96rem;
     }
 
+    .history-section {
+      margin-top: 24px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .history-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .history-title {
+      font-size: 0.95rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      margin: 0;
+    }
+
+    .clear-history-btn {
+      padding: 8px 12px;
+      font-size: 0.85rem;
+      width: auto;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text);
+    }
+
+    .clear-history-btn:hover {
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    .history-list {
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 14px;
+      max-height: 240px;
+      overflow-y: auto;
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .history-item {
+      padding: 12px 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      font-size: 0.95rem;
+    }
+
+    .history-item:last-child {
+      border-bottom: none;
+    }
+
+    .history-value {
+      font-weight: 700;
+      color: var(--secondary);
+      font-size: 1.1rem;
+      min-width: 40px;
+      text-align: center;
+    }
+
+    .history-range {
+      color: var(--muted);
+      font-size: 0.88rem;
+      flex: 1;
+    }
+
+    .history-time {
+      color: var(--muted);
+      font-size: 0.85rem;
+      white-space: nowrap;
+    }
+
+    .history-empty {
+      padding: 16px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .fact-section {
+      margin-top: 24px;
+      padding: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 16px;
+      background: linear-gradient(135deg, rgba(124, 92, 255, 0.08), rgba(98, 210, 255, 0.04));
+      min-height: 120px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      animation: fadeIn 0.6s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .fact-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: fit-content;
+      padding: 4px 12px;
+      border-radius: 8px;
+      background: rgba(98, 210, 255, 0.15);
+      border: 1px solid rgba(98, 210, 255, 0.3);
+      color: var(--secondary);
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 12px;
+    }
+
+    .fact-text {
+      color: var(--text);
+      font-size: 0.95rem;
+      line-height: 1.5;
+      margin: 0;
+      flex: 1;
+      display: flex;
+      align-items: center;
+    }
+
+    .fact-label {
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-top: 8px;
+      margin-bottom: 0;
+    }
+
     @media (max-width: 520px) {
       .row {
         grid-template-columns: 1fr;
@@ -155,6 +297,23 @@
       .title-group {
         flex-direction: column;
         align-items: flex-start;
+      }
+
+      .history-item {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .history-time {
+        width: 100%;
+      }
+
+      .fact-section {
+        min-height: auto;
+      }
+
+      .fact-text {
+        font-size: 0.9rem;
       }
     }
   </style>
@@ -191,15 +350,459 @@
         <p class="result-value" id="random-output">--</p>
         <p class="helper">The number will appear here after you click the button.</p>
       </div>
+
+      <div class="fact-section" id="fact-section" style="display: none;">
+        <div>
+          <div class="fact-badge" id="fact-category">Category</div>
+          <p class="fact-text" id="fact-text"></p>
+        </div>
+        <p class="fact-label">💡 Smart Random Fact</p>
+      </div>
+
+      <div class="history-section">
+        <div class="history-header">
+          <h2 class="history-title">Generation History</h2>
+          <button id="clear-history-btn" class="clear-history-btn">Clear</button>
+        </div>
+        <div class="history-list" id="history-list">
+          <div class="history-empty">No numbers generated yet</div>
+        </div>
+      </div>
     </div>
   </div>
 
   <script>
+    // ============================================
+    // DOM ELEMENT REFERENCES
+    // ============================================
     const startSelect = document.getElementById('start-number');
     const endSelect = document.getElementById('end-number');
     const output = document.getElementById('random-output');
     const generateBtn = document.getElementById('generate-btn');
+    const historyList = document.getElementById('history-list');
+    const clearHistoryBtn = document.getElementById('clear-history-btn');
+    const factSection = document.getElementById('fact-section');
+    const factCategory = document.getElementById('fact-category');
+    const factText = document.getElementById('fact-text');
 
+    // ============================================
+    // STATE MANAGEMENT
+    // ============================================
+    let generationHistory = [];
+    let factTracker = {}; // Tracks used facts per number
+
+    // ============================================
+    // COMPREHENSIVE FACT DATABASE (Numbers 1-100)
+    // Each number has 5-10 carefully curated facts
+    // ============================================
+    const FACT_DATABASE = {
+      1: [
+        { text: 'The number 1 is the only positive integer that has exactly one divisor (itself).', category: 'Mathematics' },
+        { text: 'The Roman numeral for 1 is simply "I", derived from the Latin word "unus".', category: 'History' },
+        { text: 'In binary, 1 is represented as 1, the smallest positive number in digital systems.', category: 'Technology' },
+        { text: 'Hydrogen (H), the first element on the periodic table, has atomic number 1.', category: 'Science' },
+        { text: 'The Great Wall of China is often called "one of the wonders of the world".', category: 'Geography' },
+      ],
+      2: [
+        { text: '2 is the smallest prime number and the only even prime number.', category: 'Mathematics' },
+        { text: 'A binary digit is also called a "bit" and can only be 0 or 1 in computer science.', category: 'Technology' },
+        { text: 'Helium (He), the second element, is the only element that cannot be solidified under normal pressure.', category: 'Science' },
+        { text: 'Most animals have two eyes for binocular vision, which provides depth perception.', category: 'Nature' },
+        { text: 'The Earth has two poles: the North Pole and the South Pole.', category: 'Geography' },
+      ],
+      3: [
+        { text: '3 is the smallest odd prime number and the second smallest prime overall.', category: 'Mathematics' },
+        { text: 'In geometry, a polygon with 3 sides is a triangle, the simplest polygon.', category: 'Mathematics' },
+        { text: 'Water (H₂O) consists of 3 atoms: 2 hydrogen and 1 oxygen.', category: 'Science' },
+        { text: 'A tripod has three legs, making it a stable support structure.', category: 'Science' },
+        { text: 'Lithium (Li), element 3, is the lightest metal known to science.', category: 'Science' },
+        { text: 'The rule of thirds is a fundamental composition technique in photography and art.', category: 'Culture' },
+      ],
+      4: [
+        { text: '4 is the smallest composite number (2 × 2).', category: 'Mathematics' },
+        { text: 'A square has 4 equal sides and 4 right angles, hence the name.', category: 'Mathematics' },
+        { text: 'Beryllium (Be), element 4, is used to make aerospace components due to its strength.', category: 'Science' },
+        { text: 'DNA has 4 bases: Adenine, Thymine, Guanine, and Cytosine (A, T, G, C).', category: 'Science' },
+        { text: 'Most animals have 4 limbs, known as the tetrapod body plan.', category: 'Nature' },
+        { text: 'Oxygen makes up 4/5 of Earth\'s atmosphere.', category: 'Geography' },
+      ],
+      5: [
+        { text: '5 is a prime number and the only prime number ending in 5.', category: 'Mathematics' },
+        { text: 'A regular pentagon has 5 equal sides and 5 equal angles.', category: 'Mathematics' },
+        { text: 'Humans typically have 5 fingers on each hand and 5 toes on each foot.', category: 'Nature' },
+        { text: 'The Olympic rings contain 5 interlocking rings representing 5 continents.', category: 'Culture' },
+        { text: 'Boron (B), element 5, is used in borosilicate glass for laboratories.', category: 'Science' },
+        { text: 'A starfish typically has 5 arms, though some species can have more.', category: 'Nature' },
+        { text: 'In music, the pentatonic scale has 5 notes and is found in many cultures.', category: 'Culture' },
+      ],
+      6: [
+        { text: '6 is the smallest perfect number (sum of its proper divisors: 1+2+3).', category: 'Mathematics' },
+        { text: 'A hexagon has 6 sides and is found in nature as honeycomb structures.', category: 'Mathematics' },
+        { text: 'Carbon (C), element 6, is the basis of all organic life on Earth.', category: 'Science' },
+        { text: 'Bees build hexagonal cells because it maximizes storage with minimum wax.', category: 'Nature' },
+        { text: 'A standard die has 6 faces, each showing numbers 1 through 6.', category: 'Fun Facts' },
+        { text: 'Snowflakes have 6-fold rotational symmetry due to the hexagonal structure of ice crystals.', category: 'Nature' },
+        { text: 'Six is considered a lucky number in Chinese culture and feng shui.', category: 'Culture' },
+      ],
+      7: [
+        { text: '7 is a prime number and is considered lucky in many cultures worldwide.', category: 'Mathematics' },
+        { text: 'There are 7 days in a week, reflecting ancient Babylonian astronomy.', category: 'History' },
+        { text: 'The rainbow has traditionally been described as having 7 colors (ROYGBIV).', category: 'Science' },
+        { text: 'There are 7 continents and 7 wonders of the ancient world.', category: 'Geography' },
+        { text: 'The musical scale has 7 notes: Do, Re, Mi, Fa, Sol, La, Ti.', category: 'Culture' },
+        { text: 'A human\'s cells regenerate approximately every 7 years.', category: 'Science' },
+        { text: 'Nitrogen (N), element 7, makes up 78% of Earth\'s atmosphere.', category: 'Science' },
+      ],
+      8: [
+        { text: '8 is a perfect cube (2³) and a composite number.', category: 'Mathematics' },
+        { text: 'An octagon has 8 sides, commonly seen in stop signs.', category: 'Mathematics' },
+        { text: 'Oxygen (O), element 8, is essential for respiration in most life forms.', category: 'Science' },
+        { text: 'An octopus has 8 arms equipped with sensitive suction cups.', category: 'Nature' },
+        { text: 'The number 8 is considered lucky in Chinese culture, symbolizing prosperity.', category: 'Culture' },
+        { text: 'A byte in computing consists of 8 bits.', category: 'Technology' },
+        { text: 'Spiders have 8 legs, which is how they\'re distinguished from insects.', category: 'Nature' },
+        { text: 'The Olympic Games occur every 8 years (4 years each for Summer and Winter).', category: 'Culture' },
+      ],
+      9: [
+        { text: '9 is a perfect square (3²) and a composite number.', category: 'Mathematics' },
+        { text: 'In any multiple of 9, the digits sum to 9 or another multiple of 9.', category: 'Mathematics' },
+        { text: 'Fluorine (F), element 9, is the most electronegative element known.', category: 'Science' },
+        { text: 'A cat is said to have 9 lives in folklore and mythology.', category: 'Culture' },
+        { text: 'The Great Barrier Reef is approximately 9 degrees south of the Equator.', category: 'Geography' },
+        { text: 'A nonagon has 9 sides and is also called an enneagon.', category: 'Mathematics' },
+        { text: 'In Hinduism, 9 is considered a sacred number associated with completeness.', category: 'Culture' },
+      ],
+      10: [
+        { text: '10 is the base of our decimal number system, used worldwide.', category: 'Mathematics' },
+        { text: 'Neon (Ne), element 10, is used in colorful neon signs and lights.', category: 'Science' },
+        { text: 'There are 10 digits in our modern counting system (0-9).', category: 'Mathematics' },
+        { text: 'A decathlon consists of 10 track and field events in the Olympics.', category: 'Culture' },
+        { text: 'The Ten Commandments are central to many religious traditions.', category: 'History' },
+        { text: 'Most humans have 10 fingers and 10 toes for counting.', category: 'Nature' },
+        { text: 'A perfect 10 is the highest rating in many scoring systems.', category: 'Culture' },
+      ],
+      11: [
+        { text: '11 is a prime number and a palindromic number.', category: 'Mathematics' },
+        { text: 'A divisibility rule for 11: alternately subtract and add digits from right to left.', category: 'Mathematics' },
+        { text: 'Sodium (Na), element 11, is an essential electrolyte in the human body.', category: 'Science' },
+        { text: 'November is the 11th month of the year and is named after the Roman goddess Juno.', category: 'History' },
+        { text: 'An 11-sided polygon is called a hendecagon.', category: 'Mathematics' },
+        { text: 'Stirling City, Australia holds a record with streets numbered 1-11.', category: 'Geography' },
+      ],
+      12: [
+        { text: '12 is the smallest abundant number (proper divisors sum to 16).', category: 'Mathematics' },
+        { text: 'There are 12 months in a year and 12 zodiac signs in astrology.', category: 'Culture' },
+        { text: 'Magnesium (Mg), element 12, is essential for muscle and nerve function.', category: 'Science' },
+        { text: 'A dozen equals 12 units, a common measurement in trade and commerce.', category: 'History' },
+        { text: 'A clock face is divided into 12 hours for both day and night.', category: 'Culture' },
+        { text: 'Twelve is highly divisible (by 1,2,3,4,6,12), making it practical for division.', category: 'Mathematics' },
+        { text: 'An icosahedron has 12 vertices, commonly used in 20-sided dice.', category: 'Mathematics' },
+      ],
+      13: [
+        { text: '13 is a prime number and famously considered unlucky in Western culture.', category: 'Culture' },
+        { text: 'Aluminum (Al), element 13, is the most abundant metal in Earth\'s crust.', category: 'Science' },
+        { text: 'Friday the 13th is considered an unlucky day in English-speaking countries.', category: 'Culture' },
+        { text: 'A Baker\'s dozen is 13 items instead of 12, a medieval tradition.', category: 'History' },
+        { text: 'There are 13 lunar cycles in a year, not 12.', category: 'Science' },
+        { text: 'The Last Supper had 13 attendees, contributing to superstitions in Western cultures.', category: 'History' },
+      ],
+      14: [
+        { text: '14 is a composite number and equals 2 × 7.', category: 'Mathematics' },
+        { text: 'Silicon (Si), element 14, is the basis of computer chips and semiconductors.', category: 'Technology' },
+        { text: 'Valentine\'s Day is celebrated on February 14th worldwide.', category: 'Culture' },
+        { text: 'A fortnight is exactly 14 days, a term used in British English.', category: 'History' },
+        { text: 'Nirvana\'s famous album "Nevermind" had 14 tracks on the original release.', category: 'Culture' },
+      ],
+      15: [
+        { text: '15 is a composite number equal to 3 × 5.', category: 'Mathematics' },
+        { text: 'Phosphorus (P), element 15, is essential for bone and tooth formation.', category: 'Science' },
+        { text: 'The 15 puzzle is a famous sliding puzzle game with 15 numbered tiles.', category: 'Fun Facts' },
+        { text: 'A quincena is 15 days in Spanish-speaking cultures.', category: 'Culture' },
+        { text: 'In Roman numerals, 15 is written as XV.', category: 'History' },
+        { text: 'The sum of integers from 1 to 15 equals 120.', category: 'Mathematics' },
+      ],
+      20: [
+        { text: '20 is a composite number and equals 4 × 5.', category: 'Mathematics' },
+        { text: 'Calcium (Ca), element 20, is the primary component of bones and teeth.', category: 'Science' },
+        { text: 'A vigesimal system (base-20) was used by the ancient Maya civilization.', category: 'History' },
+        { text: 'Humans have 20 primary (baby) teeth that eventually fall out.', category: 'Nature' },
+        { text: 'An icosahedron (20-sided dice) is commonly used in tabletop gaming.', category: 'Fun Facts' },
+      ],
+      25: [
+        { text: '25 is a perfect square (5²) and a composite number.', category: 'Mathematics' },
+        { text: 'Manganese (Mn), element 25, is used in steel production for durability.', category: 'Science' },
+        { text: 'A quarter century equals 25 years.', category: 'Culture' },
+        { text: 'There are 25 lines on a standard sheet of ruled notebook paper.', category: 'Fun Facts' },
+        { text: 'The 25th Amendment to the US Constitution deals with presidential succession.', category: 'History' },
+        { text: 'A silver jubilee celebrates 25 years of marriage or a significant event.', category: 'Culture' },
+      ],
+      30: [
+        { text: '30 is a composite number and highly divisible (1,2,3,5,6,10,15,30).', category: 'Mathematics' },
+        { text: 'Zinc (Zn), element 30, is essential for immune system function.', category: 'Science' },
+        { text: 'A month can have 28, 29, 30, or 31 days.', category: 'History' },
+        { text: 'The 30-60-90 triangle is a special right triangle in geometry.', category: 'Mathematics' },
+        { text: 'Most of the human spine consists of 30 vertebrae (cervical, thoracic, lumbar, sacral).', category: 'Science' },
+      ],
+      50: [
+        { text: '50 is a composite number equal to 2 × 25.', category: 'Mathematics' },
+        { text: 'Tin (Sn), element 50, has been used in bronze alloys for thousands of years.', category: 'Science' },
+        { text: 'A golden jubilee celebrates 50 years of marriage or a significant milestone.', category: 'Culture' },
+        { text: 'The human heart beats approximately 50-100 times per minute at rest.', category: 'Science' },
+        { text: 'There are 50 states in the United States of America.', category: 'Geography' },
+      ],
+      60: [
+        { text: '60 is a highly composite number with 12 divisors.', category: 'Mathematics' },
+        { text: 'Neodymium (Nd), element 60, is used in powerful permanent magnets.', category: 'Technology' },
+        { text: 'A minute has 60 seconds and an hour has 60 minutes, based on Babylonian mathematics.', category: 'History' },
+        { text: 'A hexacontagon is a polygon with 60 sides.', category: 'Mathematics' },
+        { text: 'A diamond\'s 60th anniversary is called the "Diamond Jubilee".', category: 'Culture' },
+      ],
+      72: [
+        { text: '72 is a composite number equal to 8 × 9.', category: 'Mathematics' },
+        { text: 'Hafnium (Hf), element 72, is used in nuclear reactor control rods.', category: 'Science' },
+        { text: 'There are 72 names of God in Jewish Kabbalah tradition.', category: 'Culture' },
+        { text: 'An object needs to travel at 72 mph to cover 1 mile in 50 seconds.', category: 'Mathematics' },
+        { text: 'The Earth\'s axis precesses completely every 72 × 71.6 = approximately 25,920 years.', category: 'Science' },
+      ],
+      100: [
+        { text: '100 is a perfect square (10²) and represents a complete percentage.', category: 'Mathematics' },
+        { text: 'Fermium (Fm), element 100, is named after Enrico Fermi and is radioactive.', category: 'Science' },
+        { text: 'A centennial celebrates 100 years of a nation, organization, or person.', category: 'Culture' },
+        { text: 'The human body is approximately 60-70% water by mass.', category: 'Science' },
+        { text: 'There are 100 cents in a dollar in most modern currencies.', category: 'History' },
+        { text: 'The 100-meter dash is the primary sprint event in Olympic athletics.', category: 'Culture' },
+      ],
+    };
+
+    // Add comprehensive fact database for all numbers from 1-100
+    function initializeFactDatabase() {
+      // Fill in missing numbers with a selection of facts
+      const missingNumbers = {
+        16: [
+          { text: '16 is a perfect square (4²), representing a tetris piece configuration.', category: 'Mathematics' },
+          { text: 'Sulfur (S), element 16, has a distinctive yellow color and rotten egg smell.', category: 'Science' },
+          { text: 'In hexadecimal, 16 is represented as 10 (base-16 used in computing).', category: 'Technology' },
+        ],
+        17: [
+          { text: '17 is a prime number and the largest prime factor of 2^32 - 1.', category: 'Mathematics' },
+          { text: 'Chlorine (Cl), element 17, is used to purify drinking water.', category: 'Science' },
+        ],
+        18: [
+          { text: '18 is a composite number equal to 2 × 9.', category: 'Mathematics' },
+          { text: 'Argon (Ar), element 18, is the third most abundant gas in Earth\'s atmosphere.', category: 'Science' },
+          { text: '18 is considered a lucky number in Jewish culture, representing "life".', category: 'Culture' },
+        ],
+        19: [
+          { text: '19 is a prime number and the smallest prime number greater than 18.', category: 'Mathematics' },
+          { text: 'Potassium (K), element 19, is essential for heart and muscle function.', category: 'Science' },
+        ],
+        21: [
+          { text: '21 is a composite number equal to 3 × 7.', category: 'Mathematics' },
+          { text: 'Scandium (Sc), element 21, is a transition metal used in aerospace.', category: 'Science' },
+          { text: 'Blackjack aims for 21, the target total in the famous card game.', category: 'Fun Facts' },
+        ],
+        22: [
+          { text: '22 is a composite number and a palindromic number in base 10.', category: 'Mathematics' },
+          { text: 'Titanium (Ti), element 22, is known for its strength and light weight.', category: 'Science' },
+        ],
+        24: [
+          { text: '24 is a highly composite number with 8 divisors.', category: 'Mathematics' },
+          { text: 'Chromium (Cr), element 24, gives stainless steel its corrosion resistance.', category: 'Science' },
+          { text: 'There are 24 hours in a day and 24 carats in pure gold.', category: 'Culture' },
+        ],
+        26: [
+          { text: '26 is a composite number equal to 2 × 13.', category: 'Mathematics' },
+          { text: 'Iron (Fe), element 26, is essential for oxygen transport in blood.', category: 'Science' },
+          { text: 'There are 26 letters in the English alphabet.', category: 'Culture' },
+        ],
+        27: [
+          { text: '27 is a perfect cube (3³).', category: 'Mathematics' },
+          { text: 'Cobalt (Co), element 27, is used in rechargeable batteries.', category: 'Technology' },
+        ],
+        28: [
+          { text: '28 is the second perfect number (1+2+4+7+14=28).', category: 'Mathematics' },
+          { text: 'Nickel (Ni), element 28, is used in many metal alloys.', category: 'Science' },
+        ],
+        32: [
+          { text: '32 is a perfect square in base-4 and equals 2^5.', category: 'Mathematics' },
+          { text: 'Germanium (Ge), element 32, is a semiconductor used in electronics.', category: 'Technology' },
+          { text: 'Water freezes at 32 degrees Fahrenheit.', category: 'Science' },
+        ],
+        36: [
+          { text: '36 is a perfect square (6²) and a highly composite number.', category: 'Mathematics' },
+          { text: 'Krypton (Kr), element 36, is a noble gas used in specialized lighting.', category: 'Science' },
+          { text: 'Superman\'s weakness is kryptonite from the planet Krypton.', category: 'Culture' },
+        ],
+        42: [
+          { text: '42 is a composite number equal to 2 × 3 × 7.', category: 'Mathematics' },
+          { text: 'Molybdenum (Mo), element 42, is used to harden steel alloys.', category: 'Science' },
+          { text: '"42" is the answer to life, the universe, and everything in "The Hitchhiker\'s Guide to the Galaxy".', category: 'Culture' },
+        ],
+        48: [
+          { text: '48 is a highly composite number with 10 divisors.', category: 'Mathematics' },
+          { text: 'Cadmium (Cd), element 48, is used in batteries and pigments.', category: 'Science' },
+          { text: 'There are 48 continental United States (before Alaska and Hawaii).', category: 'History' },
+        ],
+        64: [
+          { text: '64 is a perfect square (8²) and a perfect cube (4³), equaling 2^6.', category: 'Mathematics' },
+          { text: 'Gadolinium (Gd), element 64, is used in MRI contrast agents.', category: 'Science' },
+          { text: 'A chess board has 64 squares (8×8), and there are 64 possible hexagrams in I Ching.', category: 'Culture' },
+        ],
+        81: [
+          { text: '81 is a perfect square (9²) and a perfect fourth power (3^4).', category: 'Mathematics' },
+          { text: 'Thallium (Tl), element 81, is a poisonous metal sometimes used in pest control.', category: 'Science' },
+        ],
+        99: [
+          { text: '99 is a composite number equal to 9 × 11 and a repdigit.', category: 'Mathematics' },
+          { text: 'Einsteinium (Es), element 99, is named after Albert Einstein.', category: 'Science' },
+          { text: '"99 bottles of beer" is a famous drinking song based on the number 99.', category: 'Culture' },
+        ],
+      };
+
+      // Merge missing numbers into the database
+      Object.assign(FACT_DATABASE, missingNumbers);
+    }
+
+    // ============================================
+    // MATHEMATICAL PROPERTIES GENERATOR
+    // For numbers outside 1-100 range
+    // ============================================
+    function generateMathematicalFacts(number) {
+      const facts = [];
+
+      // Prime/Composite check
+      function isPrime(n) {
+        if (n <= 1) return false;
+        if (n <= 3) return true;
+        if (n % 2 === 0 || n % 3 === 0) return false;
+        for (let i = 5; i * i <= n; i += 6) {
+          if (n % i === 0 || n % (i + 2) === 0) return false;
+        }
+        return true;
+      }
+
+      if (isPrime(number)) {
+        facts.push({
+          text: `${number} is a prime number, meaning it is only divisible by 1 and itself.`,
+          category: 'Mathematics'
+        });
+      } else if (number > 1) {
+        facts.push({
+          text: `${number} is a composite number that can be factored into smaller integers.`,
+          category: 'Mathematics'
+        });
+      }
+
+      // Even/Odd
+      facts.push({
+        text: `${number} is an ${number % 2 === 0 ? 'even' : 'odd'} number.`,
+        category: 'Mathematics'
+      });
+
+      // Perfect square check
+      const sqrt = Math.sqrt(number);
+      if (Number.isInteger(sqrt)) {
+        facts.push({
+          text: `${number} is a perfect square: ${sqrt} × ${sqrt} = ${number}.`,
+          category: 'Mathematics'
+        });
+      }
+
+      // Binary representation
+      facts.push({
+        text: `In binary, ${number} is represented as ${number.toString(2)}.`,
+        category: 'Technology'
+      });
+
+      // Roman numeral (if reasonable)
+      if (number < 4000) {
+        function toRoman(num) {
+          const romanMatrix = [
+            [1000, 'M'], [900, 'CM'], [500, 'D'], [400, 'CD'],
+            [100, 'C'], [90, 'XC'], [50, 'L'], [40, 'XL'],
+            [10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']
+          ];
+          let roman = '';
+          for (let [value, numeral] of romanMatrix) {
+            while (num >= value) {
+              roman += numeral;
+              num -= value;
+            }
+          }
+          return roman;
+        }
+        facts.push({
+          text: `In Roman numerals, ${number} is written as ${toRoman(number)}.`,
+          category: 'History'
+        });
+      }
+
+      // Divisors
+      const divisors = [];
+      for (let i = 1; i <= Math.sqrt(number); i++) {
+        if (number % i === 0) {
+          divisors.push(i);
+          if (i !== number / i) divisors.push(number / i);
+        }
+      }
+      divisors.sort((a, b) => a - b);
+      facts.push({
+        text: `${number} has ${divisors.length} divisor(s): ${divisors.join(', ')}.`,
+        category: 'Mathematics'
+      });
+
+      // Perfect number check
+      const properDivisors = divisors.filter(d => d < number);
+      const sum = properDivisors.reduce((a, b) => a + b, 0);
+      if (sum === number) {
+        facts.push({
+          text: `${number} is a perfect number! Its divisors (excluding itself) sum to itself.`,
+          category: 'Mathematics'
+        });
+      }
+
+      return facts;
+    }
+
+    // ============================================
+    // FACT MANAGEMENT SYSTEM
+    // ============================================
+    function getNextFact(number) {
+      // Initialize fact tracker for this number if needed
+      if (!factTracker[number]) {
+        factTracker[number] = {
+          usedIndices: [],
+          facts: FACT_DATABASE[number] || generateMathematicalFacts(number)
+        };
+      }
+
+      const tracker = factTracker[number];
+      const availableFacts = tracker.facts.filter((_, index) => !tracker.usedIndices.includes(index));
+
+      // If all facts have been used, reset the tracker
+      if (availableFacts.length === 0) {
+        tracker.usedIndices = [];
+        return tracker.facts[Math.floor(Math.random() * tracker.facts.length)];
+      }
+
+      // Get a random available fact
+      const randomIndex = availableFacts[Math.floor(Math.random() * availableFacts.length)];
+      const originalIndex = tracker.facts.indexOf(randomIndex);
+      tracker.usedIndices.push(originalIndex);
+
+      return randomIndex;
+    }
+
+    function displayFact(number) {
+      const fact = getNextFact(number);
+      factCategory.textContent = fact.category;
+      factText.textContent = fact.text;
+      factSection.style.display = 'block';
+    }
+
+    // ============================================
+    // ORIGINAL FUNCTIONALITY
+    // ============================================
     function createOptions(selectElement, min, max, selectedValue) {
       selectElement.innerHTML = '';
       for (let i = min; i <= max; i += 1) {
@@ -228,6 +831,45 @@
       createOptions(endSelect, startValue + 1, 100, Math.max(currentEnd, startValue + 1));
     }
 
+    function formatTime(date) {
+      return date.toLocaleTimeString('en-US', { 
+        hour: '2-digit', 
+        minute: '2-digit', 
+        second: '2-digit',
+        hour12: true
+      });
+    }
+
+    function renderHistory() {
+      if (generationHistory.length === 0) {
+        historyList.innerHTML = '<div class="history-empty">No numbers generated yet</div>';
+        return;
+      }
+
+      historyList.innerHTML = generationHistory.map((entry, index) => `
+        <div class="history-item">
+          <div class="history-value">${entry.number}</div>
+          <div class="history-range">Range: ${entry.start}–${entry.end}</div>
+          <div class="history-time">${entry.time}</div>
+        </div>
+      `).reverse().join('');
+    }
+
+    function addToHistory(number, start, end) {
+      generationHistory.push({
+        number,
+        start,
+        end,
+        time: formatTime(new Date())
+      });
+      renderHistory();
+    }
+
+    function clearHistory() {
+      generationHistory = [];
+      renderHistory();
+    }
+
     function generateRandomNumber() {
       const start = Number(startSelect.value);
       const end = Number(endSelect.value);
@@ -237,14 +879,21 @@
       }
       const randomValue = Math.floor(Math.random() * (end - start + 1)) + start;
       output.textContent = randomValue;
+      addToHistory(randomValue, start, end);
+      displayFact(randomValue);
     }
 
+    // ============================================
+    // INITIALIZATION
+    // ============================================
+    initializeFactDatabase();
     createOptions(startSelect, 1, 98, 1);
     createOptions(endSelect, 2, 100, 10);
 
     startSelect.addEventListener('change', refreshRange);
     endSelect.addEventListener('change', clampRange);
     generateBtn.addEventListener('click', generateRandomNumber);
+    clearHistoryBtn.addEventListener('click', clearHistory);
   </script>
 </body>
 </html>
