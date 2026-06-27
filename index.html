@@ -29,6 +29,7 @@
                   radial-gradient(circle at bottom right, rgba(98, 210, 255, 0.16), transparent 25%),
                   linear-gradient(180deg, #10131d 0%, #141923 100%);
       color: var(--text);
+      display: flex;
     }
 
     .container {
@@ -316,9 +317,28 @@
         font-size: 0.9rem;
       }
     }
+    pre {
+      background: #0f172a;
+      padding: 15px;
+      border-radius: 8px;
+      overflow-x: auto;
+      color: #94a3b8;
+    }
   </style>
 </head>
 <body>
+  <div class="container">
+    <pre id="code">
+    function generateRandom() {
+      const min = parseInt(document.getElementById("min").value);
+      const max = parseInt(document.getElementById("max").value);
+      const randomNum = Math.floor(Math.random() * (max - min + 1)) + min;
+      document.getElementById("result").innerText = randomNum;
+    }
+  </pre>
+    <p id="result"></p>
+    <button onclick="copyToClipboard()">Copy to Clipboard</button>
+  </div>
   <div class="container">
     <div class="title-group">
       <div>
@@ -372,6 +392,20 @@
   </div>
 
   <script>
+    // ============================================
+    // START - Copy To Clipboard
+    function copyToClipboard() {
+    const resultText = document.getElementById("result").innerText;
+      if (resultText) {
+        navigator.clipboard.writeText(resultText).then(() => {
+          alert("Copied: " + resultText);
+        });
+      } else {
+        alert("No number to copy!");
+      }
+    }
+  // END - Copy to clipboard 
+
     // ============================================
     // DOM ELEMENT REFERENCES
     // ============================================
