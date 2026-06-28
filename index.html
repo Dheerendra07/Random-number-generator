@@ -327,6 +327,7 @@
   </style>
 </head>
 <body>
+  <p>Note: The code snippet below is for demonstration purposes. You can copy it to your clipboard using the button below.</p>
   <div class="container">
     <pre id="code">
     function generateRandom() {
@@ -395,7 +396,8 @@
     // ============================================
     // START - Copy To Clipboard
     function copyToClipboard() {
-    const resultText = document.getElementById("result").innerText;
+    const resultText = document.getElementById("code").innerText;
+    console.log("resultText:", resultText);
       if (resultText) {
         navigator.clipboard.writeText(resultText).then(() => {
           alert("Copied: " + resultText);
