@@ -325,6 +325,7 @@
       color: #94a3b8;
     }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
   <p>Note: The code snippet below is for demonstration purposes. You can copy it to your clipboard using the button below.</p>
@@ -395,16 +396,36 @@
   <script>
     // ============================================
     // START - Copy To Clipboard
-    function copyToClipboard() {
-    const resultText = document.getElementById("code").innerText;
-    console.log("resultText:", resultText);
-      if (resultText) {
-        navigator.clipboard.writeText(resultText).then(() => {
-          alert("Copied: " + resultText);
+    function showNotification(message, icon = 'success') {
+      if (window.Swal) {
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon,
+          title: message,
+          showConfirmButton: false,
+          timer: 2200,
+          timerProgressBar: true,
+          background: '#1f2941',
+          color: '#eef2ff',
+          iconColor: icon === 'success' ? '#62d2ff' : icon === 'warning' ? '#fbbf24' : '#f87171'
         });
       } else {
-        alert("No number to copy!");
+        alert(message);
       }
+    }
+
+    function copyToClipboard() {
+      const resultText = document.getElementById("code").textContent.trim();
+
+      if (!resultText) {
+        showNotification('Nothing to copy yet.', 'warning');
+        return;
+      }
+
+      navigator.clipboard.writeText(resultText)
+        .then(() => showNotification('Code copied to clipboard!', 'success'))
+        .catch(() => showNotification('Unable to copy automatically. Please try again.', 'error'));
     }
   // END - Copy to clipboard 
 
